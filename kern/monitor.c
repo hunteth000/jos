@@ -84,14 +84,14 @@ mon_backtrace(int argc, char **argv, struct Trapframe *tf)
                     info.eip_file, info.eip_line,
                     info.eip_fn_namelen, info.eip_fn_name,
                     eip - info.eip_fn_addr);
+        } else {
+            cprintf("       <unknown>\n");
         }
 
         ebp = (uint32_t *) ebp[0];
     }
 
-
-
-	return 0;
+    return 0;
 }
 
 int exec_hidden_cases(int argc, char **argv, struct Trapframe *tf) {
