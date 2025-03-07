@@ -62,6 +62,7 @@ static const char *trapname(int trapno)
 // XYZ: write a function declaration here...
 // e.g., void t_divide();
 
+
 void
 trap_init(void)
 {
@@ -77,6 +78,62 @@ trap_init(void)
      *
      */
 	// LAB 3: Your code here.
+
+	extern void t_simderr();
+	extern void t_tss();
+	extern void t_syscall();
+	extern void t_stack();
+	extern void t_nmi();
+	extern void t_oflow();
+	extern void t_mchk();
+	extern void t_device();
+	extern void t_dblflt();
+	extern void t_bound();
+	extern void t_gpflt();
+	extern void t_illop();
+	extern void t_brkpt();
+	extern void t_pgflt();
+	extern void t_debug();
+	extern void t_fperr();
+	extern void t_segnp();
+	extern void t_align();
+	extern void t_divide();
+
+	struct trap_gate {
+		int num;
+		void (*handler)(void);
+		int dpl;
+	};
+
+	static struct trap_gate gates[] = {
+		{ T_SIMDERR, t_simderr, 0 },
+		{ T_TSS, t_tss, 0 },
+		{ T_SYSCALL, t_syscall, 3 },
+		{ T_STACK, t_stack, 0 },
+		{ T_NMI, t_nmi, 0 },
+		{ T_OFLOW, t_oflow, 0 },
+		{ T_MCHK, t_mchk, 0 },
+		{ T_DEVICE, t_device, 0 },
+		{ T_DBLFLT, t_dblflt, 0 },
+		{ T_BOUND, t_bound, 0 },
+		{ T_GPFLT, t_gpflt, 0 },
+		{ T_BRKPT, t_brkpt, 3 },
+		{ T_PGFLT, t_pgflt, 0 },
+		{ T_DEBUG, t_debug, 0 },
+		{ T_FPERR, t_fperr, 0 },
+		{ T_SEGNP, t_segnp, 0 },
+		{ T_ALIGN, t_align, 0 },
+		{ T_DIVIDE, t_divide, 0 }             };
+
+	int i = 0;
+	int total = sizeof(gates) / sizeof(gates[0]);
+	while (i < total) {
+		SETGATE(idt[gates[i].num], 0, GD_KT, gates[i].handler, gates[i].dpl);
+		i = i + 1;
+	}
+
+
+
 
 	// Per-CPU setup
 	trap_init_percpu();
@@ -156,6 +213,8 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
+	
+
 
 	// Unexpected trap: The user process or the kernel has a bug.
 	print_trapframe(tf);
@@ -217,6 +276,8 @@ page_fault_handler(struct Trapframe *tf)
 	// Handle kernel-mode page faults.
 
 	// LAB 3: Your code here.
+	
+
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.

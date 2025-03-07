@@ -95,7 +95,7 @@ boot_alloc(uint32_t n)
 	// to any kernel code or global variables.
 	if (!nextfree) {
 		extern char end[];
-		nextfree = ROUNDUP((char *) end, PGSIZE);
+		nextfree = ROUNDUP((char *) end + 1, PGSIZE);
 	}
 
 	// Allocate a chunk large enough to hold 'n' bytes, then update
@@ -167,6 +167,13 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
+	size_t total_size = NENV * sizeof(struct Env);
+	envs = (struct Env *) boot_alloc(total_size);
+	char *p = (char *) envs;
+	char *end = p + total_size;
+	while (p < end) {
+		*p++ = 0;
+	}
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -192,7 +199,8 @@ mem_init(void)
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
-
+	boot_map_region(kern_pgdir, UPAGES, ROUNDUP(npages * sizeof(struct PageInfo), PGSIZE), PADDR(pages), PTE_U | PTE_P);
+	
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
 	// (ie. perm = PTE_U | PTE_P).
@@ -200,8 +208,7 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-	boot_map_region(kern_pgdir, UPAGES, PTSIZE, PADDR(pages), PTE_U | PTE_P);
-
+	boot_map_region(kern_pgdir, UENVS, PTSIZE, PADDR(envs), PTE_U | PTE_P);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -317,28 +324,25 @@ page_init(void)
 	}
 
 	// Compute the first available memory address after kernel data structures
-    physaddr_t kernel_mem_end = PADDR(ROUNDUP((char*)pages + npages * sizeof(struct PageInfo), PGSIZE));
+	physaddr_t kernel_mem_end = PADDR(ROUNDUP((char*)boot_alloc(0), PGSIZE));
 
     // Initialize pages in extended memory
-    i = PGNUM(IOPHYSMEM);
+    i = PGNUM(EXTPHYSMEM);
     while (i < npages) {
         physaddr_t page_address = i * PGSIZE;
 
-        // Reserve I/O hole range
-        if (page_address >= IOPHYSMEM && page_address < EXTPHYSMEM) {
-            pages[i].pp_ref = 1; 
-        }
         // Reserve kernel memory
-        else if (page_address < kernel_mem_end) {
-            pages[i].pp_ref = 1; 
-        }
-        // Add free pages to list
-        else {
-            pages[i].pp_ref = 0;
-            pages[i].pp_link = page_free_list;
-            page_free_list = &pages[i];
-        }
-        i++;
+		if (page_address < kernel_mem_end) {
+			pages[i].pp_ref = 1;
+		}
+
+		// Add free pages to list
+		else {
+			pages[i].pp_ref = 0;
+			pages[i].pp_link = page_free_list;
+			page_free_list = &pages[i];
+		}
+		i++;
     }
 	
 }
