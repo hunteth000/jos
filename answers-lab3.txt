@@ -1,0 +1,15 @@
+1. 
+
+The purpose is to assign each interrupt its own handler so then
+we can customize the response based on what happened. Different traps
+need different info for certain actions to happen. If everything was 
+lumped into one main handler then the kernel would not be able to know
+which specific interrupt had happened, which is not good.
+
+2. 
+
+Didn't have to do anything extra for the user/softint. When the user
+does int $14 it then goes to a protection fault like trap 13 instead of
+calling the page fault because the user isn't allowed to invoke the interrupt 
+14. If the kernel actually let user do int $14 then it would cause problems
+with the environment and would be terminated. 

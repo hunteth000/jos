@@ -64,8 +64,7 @@ TRAPHANDLER_NOEC(t_brkpt, T_BRKPT)
 TRAPHANDLER(t_align, T_ALIGN)
 TRAPHANDLER_NOEC(t_fperr, T_FPERR)
 TRAPHANDLER_NOEC(t_syscall, T_SYSCALL)
-TRAPHANDLER_NOEC(t_device, T_DEVICE)
-
+TRAPHANDLER_NOEC(t_device, T_DEVICE)  
 
 // HINT 1 : TRAPHANDLER_NOEC(t_divide, T_DIVIDE);
 //          Do something like this if there is no error code for the trap
@@ -77,19 +76,13 @@ TRAPHANDLER_NOEC(t_device, T_DEVICE)
 /*
  * Lab 3: Your code here for _alltraps
  */
-
 .global _alltraps
 _alltraps:
-    movl %ds, %eax
-    pushl %eax
-    movl %es, %eax
-    pushl %eax
-    pushal
-    movw $GD_KD, %bx
-    movw %bx, %ds
-    movw %bx, %es
-    movl %esp, %edx
-    pushl %edx
-    call trap
-
-
+    pushl %es
+	pushl %ds
+	pushal
+	movw $GD_KD, %ax
+	movw %ax, %es
+	movw %ax, %ds
+	pushl %esp
+	call trap
